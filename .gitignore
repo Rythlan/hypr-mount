@@ -1,0 +1,27 @@
+# Rust build artifacts
+debug/
+target/
+Cargo.lock
+
+**/*.rs.bk
+*.pdb
+
+# IDE files
+.idea/
+.vscode/
+
+
+# Test binary
+bin/test.rs
+
+# Editor swap files
+*.swp
+*.swo
+
+# Debug/traces
+*.log
+*.trace
+
+# Local configuration files
+*.local.conf
+*.env
