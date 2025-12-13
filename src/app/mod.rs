@@ -73,7 +73,7 @@ struct PopupPar<'a> {
 
 #[derive(Parser, Debug)]
 #[command(name = "Hypr-Mount")]
-#[command(version = "a0.3.0")]
+#[command(version = "b1.0")]
 #[command(about = "A TUI drive mounter", long_about = None)]
 pub struct CliArgs {
     #[arg(long, group = "mode")]
