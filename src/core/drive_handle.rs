@@ -28,10 +28,10 @@ struct Partition {
 impl Partition {
     fn is_system_drive(&self) -> bool {
         self.fstype.as_deref().unwrap_or("None").contains("swap")
-            || self.get_device_path().contains("boot")
+            || self.get_mountpoint().contains("boot")
             || self.name.contains("loop")
     }
-    fn get_device_path(&self) -> String {
+    fn get_mountpoint(&self) -> String {
         self.mountpoints
             .first()
             .map(|s| s.to_string())
@@ -59,7 +59,7 @@ pub fn list_drives() -> Result<Vec<DriveItem>, HyprMountError> {
                 }
                 drives_list.push(DriveItem {
                     name: format!("/dev/{}", part.name),
-                    device_path: part.get_device_path(),
+                    device_path: part.get_mountpoint(),
                     size: part.size,
                     uuid: part.uuid,
                     is_mounted: !part.mountpoints.is_empty(),

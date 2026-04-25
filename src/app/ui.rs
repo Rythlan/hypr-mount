@@ -265,7 +265,7 @@ impl MountApp {
             .lines()
             .enumerate()
             .map(|(i, raw_line)| {
-                let line_text = raw_line.to_string();
+                let line_text = raw_line;
 
                 // 1. Syntax Highlighting (JSON Style)
                 let content_spans: Vec<Span> = if line_text.trim() == "{"

@@ -1,16 +1,10 @@
 use crate::core::error::HyprMountError;
 use crate::core::{DriveConfig, DriveItem, drive_handle};
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::path::PathBuf;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct AutoMountConf {
-    auto_mount_drives: Vec<DriveConfig>,
-}
 
 impl From<&DriveItem> for DriveConfig {
     fn from(drive: &DriveItem) -> Self {

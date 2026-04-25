@@ -86,8 +86,11 @@ pub struct CliArgs {
 
 impl MountApp {
     fn draw(&mut self, frame: &mut Frame) {
-        if let Some(sel_op) = &mut self.selected_option {
-            sel_op.drive_name = self.drives[0].name.to_string();
+        if let Some(sel_op) = &mut self.selected_option
+            && let Some(idx) = self.table_state.selected()
+            && let Some(drive) = self.drives.get(idx)
+        {
+            sel_op.drive_name = drive.name.to_string();
         }
         let vertical_layout = Layout::vertical([Constraint::Min(0), Constraint::Length(2)]);
         let area = frame.area();
