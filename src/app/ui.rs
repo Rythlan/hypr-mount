@@ -34,7 +34,7 @@ impl MountApp {
                 };
 
                 let mut uuid_res = String::new(); //maybe there better way of doing that
-                if self.args.uncensor_uuid
+                if !self.args.show_censor_uuid
                     && let Some(uuid) = &item.uuid
                 {
                     uuid_res = uuid.to_string();
@@ -106,7 +106,7 @@ impl MountApp {
                 let drive_conf_auto = to_automount_conf(&self.drives, &self.selected_rows);
                 let script_scroll = self.script_view.script_scroll;
 
-                let script_content = if let Ok(script) = if self.args.uncensor_uuid {
+                let script_content = if let Ok(script) = if !self.args.show_censor_uuid {
                     mount::driveconf_to_string(drive_conf_auto)
                 } else {
                     mount::driveconf_to_string_censored(drive_conf_auto)
@@ -318,7 +318,7 @@ impl MountApp {
 
     fn draw_automount_popup(&self, area: Rect, drive_conf_auto: Vec<DriveConfig>) -> PopupPar<'_> {
         let block = Block::bordered().title("Script info");
-        let script_json = if self.args.uncensor_uuid {
+        let script_json = if !self.args.show_censor_uuid {
             mount::driveconf_to_string(drive_conf_auto).unwrap_or_default()
         } else {
             mount::driveconf_to_string_censored(drive_conf_auto).unwrap_or_default()

@@ -76,7 +76,10 @@ pub fn driveconf_to_string_censored(conf: Vec<DriveConfig>) -> Result<String, Hy
     let censored_conf: Vec<DriveConfig> = conf
         .into_iter()
         .map(|mut drive_config| {
-            drive_config.uuid = format!("{}...", drive_config.uuid.split_at(8).0);
+            drive_config.uuid = format!(
+                "{}...",
+                drive_config.uuid.get(..8).unwrap_or(&drive_config.uuid)
+            );
             drive_config
         })
         .collect();

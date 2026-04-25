@@ -25,7 +25,7 @@ sudo ./hypr-mount.sh install
 ## Arguments
 - `--auto-mount`: Auto mount drives based on config
 - `--generate-service`: Create systemd service
-- `--uncensor-uuid`: Show full UUIDs
+- `--show-censor-uuid`: Censor UUIDs in display
 
 ## Keybinds
 - `j`/`k` or Arrow keys: Navigate drives

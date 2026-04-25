@@ -27,9 +27,13 @@ struct Partition {
 
 impl Partition {
     fn is_system_drive(&self) -> bool {
-        self.fstype.as_deref().unwrap_or("None").contains("swap")
-            || self.get_mountpoint().contains("boot")
-            || self.name.contains("loop")
+        self.fstype
+            .as_deref()
+            .unwrap_or("None")
+            .to_lowercase()
+            .contains("swap")
+            || self.get_mountpoint().to_lowercase().contains("boot")
+            || self.name.to_lowercase().contains("loop")
     }
     fn get_mountpoint(&self) -> String {
         self.mountpoints
@@ -80,20 +84,21 @@ pub fn unmount_drive(uuid: &str) -> Result<(), HyprMountError> {
 }
 
 fn run_udisk_command(action: &str, uuid: &str) -> Result<(), HyprMountError> {
-    if action.contains("mount") || action.contains("unmount") {
-        let output = Command::new("udisksctl")
-            .arg(action)
-            .arg("--block-device")
-            .arg(format!("/dev/disk/by-uuid/{}", uuid))
-            .stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .output()?;
+    match action {
+        "mount" | "unmount" => {
+            let output = Command::new("udisksctl")
+                .arg(action)
+                .arg("--block-device")
+                .arg(format!("/dev/disk/by-uuid/{}", uuid))
+                .stdout(Stdio::null())
+                .stderr(Stdio::piped())
+                .output()?;
 
-        udiskctl_error_handle(output)
-    } else {
-        Err(HyprMountError::UDiskCtlError {
+            udiskctl_error_handle(output)
+        }
+        _ => Err(HyprMountError::UDiskCtlError {
             err_msg: format!("Invalid drive action: {}", action),
-        })
+        }),
     }
 }
 pub fn clean_udisk_error(stderr: &str) -> String {

@@ -73,7 +73,7 @@ struct PopupPar<'a> {
 
 #[derive(Parser, Debug)]
 #[command(name = "Hypr-Mount")]
-#[command(version = "b1.0")]
+#[command(version = "b1.0.1")]
 #[command(about = "A TUI drive mounter", long_about = None)]
 pub struct CliArgs {
     #[arg(long, group = "mode")]
@@ -81,7 +81,7 @@ pub struct CliArgs {
     #[arg(long, group = "mode")]
     pub generate_service: bool,
     #[arg(long, group = "mode")]
-    pub uncensor_uuid: bool,
+    pub show_censor_uuid: bool,
 }
 
 impl MountApp {
@@ -109,7 +109,7 @@ impl MountApp {
             } else {
                 self.selected_rows.insert(selected.id);
             }
-            self.status_message = format!("Selected drives id ({:?})", self.selected_rows);
+            self.status_message = format!("Selected {} drive(s)", self.selected_rows.len());
         }
     }
     fn mount_unmount_selected_cursor(&mut self) {

@@ -107,7 +107,9 @@ impl MountApp {
                     }
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
-                    if self.script_view.script_scroll < self.script_view.script_view_height - 1 {
+                    if self.script_view.script_view_height > 1
+                        && self.script_view.script_scroll < self.script_view.script_view_height - 1
+                    {
                         self.script_view.script_scroll += 1;
                     }
                 }
@@ -137,7 +139,9 @@ impl MountApp {
                     }
                 }
                 KeyCode::Down | KeyCode::Char('j') => {
-                    if self.script_view.script_scroll < self.script_view.script_view_height - 1 {
+                    if self.script_view.script_view_height > 1
+                        && self.script_view.script_scroll < self.script_view.script_view_height - 1
+                    {
                         self.script_view.script_scroll += 1;
                     }
                 }
