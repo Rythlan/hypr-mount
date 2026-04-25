@@ -1,4 +1,7 @@
-use crate::app::{AppMode, MountApp, SelectedRow};
+use crate::{
+    app::{AppMode, MountApp, SelectedRow},
+    core::drive_handle,
+};
 use crossterm::event::{KeyCode, KeyEventKind};
 use ratatui::DefaultTerminal;
 use std::io;
@@ -58,6 +61,10 @@ impl MountApp {
             KeyCode::Char('g') => {
                 self.mode = AppMode::ScriptPreview;
             }
+            KeyCode::Char('r') => match drive_handle::list_drives() {
+                Ok(drives) => self.drives = drives,
+                Err(err) => self.status_message = err.to_string(),
+            },
             _ => {}
         }
 

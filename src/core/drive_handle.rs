@@ -27,13 +27,20 @@ struct Partition {
 
 impl Partition {
     fn is_system_drive(&self) -> bool {
-        self.fstype
-            .as_deref()
-            .unwrap_or("None")
-            .to_lowercase()
-            .contains("swap")
-            || self.get_mountpoint().to_lowercase().contains("boot")
+        let fstype = self.fstype.as_deref().unwrap_or("");
+        fstype.to_lowercase().contains("swap")
+            || fstype.is_empty()
+            || fstype == "squashfs"
             || self.name.to_lowercase().contains("loop")
+            || self.name.to_lowercase().contains("dm-")
+            || self.mountpoints.iter().any(|mp| {
+                mp == "/proc"
+                    || mp.starts_with("/sys/")
+                    || (mp == "/run" || mp.starts_with("/run/")) && !mp.starts_with("/run/media")
+                    || mp.starts_with("/boot")
+                    || mp.starts_with("/efi")
+                    || mp.contains("cgroup")
+            })
     }
     fn get_mountpoint(&self) -> String {
         self.mountpoints
