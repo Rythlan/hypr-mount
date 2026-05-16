@@ -1,7 +1,7 @@
+use std::io;
 use std::path::PathBuf;
 use std::str::Utf8Error;
 use std::string::FromUtf8Error;
-use std::{env, io};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -30,8 +30,8 @@ pub enum HyprMountError {
     #[error("UDisksCtl error: {err_msg}")]
     UDiskCtlError { err_msg: String },
 
-    #[error("Could not find home directory: {0}")]
-    HomePath(#[from] env::VarError),
+    #[error("Could not determine home directory")]
+    HomeDir,
 
     #[error("Failed to convert executable path to string (probably invalid UTF-8)")]
     ExePath(),

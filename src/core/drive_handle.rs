@@ -9,31 +9,45 @@ struct LsblkData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Drives {
-    name: String,
-    size: String,
-    uuid: Option<String>,
-    children: Option<Vec<Partition>>,
+pub(crate) struct Drives {
+    pub(crate) name: String,
+    pub(crate) size: String,
+    pub(crate) uuid: Option<String>,
+    pub(crate) children: Option<Vec<Partition>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Partition {
-    name: String,
-    size: String,
-    uuid: Option<String>,
-    mountpoints: Vec<String>,
-    fstype: Option<String>,
+pub(crate) struct Partition {
+    pub(crate) name: String,
+    pub(crate) size: String,
+    pub(crate) uuid: Option<String>,
+    pub(crate) mountpoints: Vec<String>,
+    pub(crate) fstype: Option<String>,
 }
 
 impl Partition {
-    fn is_system_drive(&self) -> bool {
-        self.fstype
-            .as_deref()
-            .unwrap_or("None")
-            .to_lowercase()
-            .contains("swap")
-            || self.get_mountpoint().to_lowercase().contains("boot")
+    pub(crate) fn is_system_drive(&self) -> bool {
+        let fstype = self.fstype.as_deref().unwrap_or("");
+        if fstype == "crypto_LUKS" {
+            return false;
+        }
+        fstype.to_lowercase().contains("swap")
+            || fstype.is_empty()
+            || fstype == "squashfs"
             || self.name.to_lowercase().contains("loop")
+            || self.name.to_lowercase().contains("dm-")
+            || self.mountpoints.iter().any(|mp| {
+                mp == "/proc"
+                    || mp.starts_with("/sys/")
+                    || (mp == "/run" || mp.starts_with("/run/")) && !mp.starts_with("/run/media")
+                    || mp.starts_with("/boot")
+                    || (mp.to_lowercase().contains("efi") && fstype == "vfat")
+                    || mp.contains("cgroup")
+            })
+    }
+
+    pub(crate) fn is_luks(&self) -> bool {
+        self.fstype.as_deref() == Some("crypto_LUKS")
     }
     fn get_mountpoint(&self) -> String {
         self.mountpoints
@@ -61,13 +75,15 @@ pub fn list_drives() -> Result<Vec<DriveItem>, HyprMountError> {
                 if part.is_system_drive() {
                     continue;
                 }
+                let part_is_luks = part.is_luks();
                 drives_list.push(DriveItem {
                     name: format!("/dev/{}", part.name),
-                    device_path: part.get_mountpoint(),
+                    mount_point: part.get_mountpoint(),
                     size: part.size,
                     uuid: part.uuid,
                     is_mounted: !part.mountpoints.is_empty(),
-                    fstype: part.fstype.unwrap_or("None".to_string()),
+                    fstype: part.fstype.clone().unwrap_or_else(|| "None".to_string()),
+                    is_luks: part_is_luks,
                 });
             }
         }
@@ -103,10 +119,8 @@ fn run_udisk_command(action: &str, uuid: &str) -> Result<(), HyprMountError> {
 }
 pub fn clean_udisk_error(stderr: &str) -> String {
     if stderr.contains("GDBus.Error") {
-        let parts: Vec<&str> = stderr.split(": ").collect();
-
-        if let Some(part) = parts.last() {
-            return part.trim().to_string();
+        if let Some((_, last)) = stderr.rsplit_once(": ") {
+            return last.trim().to_string();
         }
     }
     stderr.trim().to_string()

@@ -7,15 +7,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone)]
 pub struct DriveItem {
     pub name: String,
-    pub device_path: String,
+    pub mount_point: String,
     pub size: String,
     pub uuid: Option<String>,
     pub is_mounted: bool,
     pub fstype: String,
+    pub is_luks: bool,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DriveConfig {
     pub(crate) name: String,
-    pub(crate) device_path: String,
+    pub(crate) mount_point: String,
     pub(crate) uuid: String,
 }

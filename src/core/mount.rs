@@ -9,7 +9,7 @@ use std::path::PathBuf;
 impl From<&DriveItem> for DriveConfig {
     fn from(drive: &DriveItem) -> Self {
         DriveConfig {
-            device_path: drive.device_path.to_owned(),
+            mount_point: drive.mount_point.to_owned(),
             name: drive.name.to_owned(),
             uuid: drive.uuid.as_deref().unwrap_or("").to_string(),
         }
@@ -17,7 +17,7 @@ impl From<&DriveItem> for DriveConfig {
 }
 
 pub fn get_config_path() -> Result<PathBuf, HyprMountError> {
-    let home_dir = std::env::var("HOME")?;
+    let home_dir = dirs::home_dir().ok_or(HyprMountError::HomeDir)?;
     let conf_path = PathBuf::from(home_dir)
         .join(".config")
         .join("hypr-mount")
@@ -99,12 +99,11 @@ pub fn driveconf_script_gen(conf: Vec<DriveConfig>) -> Result<(), HyprMountError
 }
 
 pub fn automount_drives_service() -> Result<(), HyprMountError> {
-    let home = std::env::var("HOME")?;
+    let home = dirs::home_dir().ok_or(HyprMountError::HomeDir)?;
     let config_name = "hypr-mount.service";
     let exec_path = std::env::current_exe()?;
 
-    let exec_path_str = exec_path.to_str()
-        .ok_or(HyprMountError::ExePath())?;
+    let exec_path_str = exec_path.to_str().ok_or(HyprMountError::ExePath())?;
 
     let dir = PathBuf::from(home)
         .join(".config")
@@ -122,8 +121,7 @@ pub fn automount_drives_service() -> Result<(), HyprMountError> {
          \n\
          [Install]\n\
          WantedBy=default.target",
-        "hypr-mount service",
-        exec_path_str
+        "hypr-mount service", exec_path_str
     );
 
     fs::create_dir_all(&dir)?;
