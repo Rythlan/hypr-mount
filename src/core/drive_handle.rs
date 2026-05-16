@@ -47,7 +47,7 @@ impl Partition {
     }
 
     pub(crate) fn is_luks(&self) -> bool {
-        self.fstype.as_deref() == Some(&"crypto_LUKS".to_string())
+        self.fstype.as_deref() == Some("crypto_LUKS")
     }
     fn get_mountpoint(&self) -> String {
         self.mountpoints
