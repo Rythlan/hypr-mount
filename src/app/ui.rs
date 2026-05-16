@@ -50,7 +50,11 @@ impl MountApp {
                         Style::default()
                     }),
                     Cell::from(item.mount_point.as_str()),
-                    Cell::from(item.fstype.as_str()),
+                    Cell::from(if item.is_luks {
+                        "[LUKS]".to_string()
+                    } else {
+                        item.fstype.clone()
+                    }),
                     Cell::from(item.size.as_str()),
                     Cell::from(status_text),
                     Cell::from(uuid_res),
@@ -155,9 +159,9 @@ impl MountApp {
     ) -> ratatui::widgets::Table<'a> {
         let widths = [
             Constraint::Length(5),  // " Sel "
-            Constraint::Length(14), // "/dev/nvme0n1p1"
+            Constraint::Length(16), // "/dev/nvme0n1p1"
             Constraint::Fill(1),    // Mount Point
-            Constraint::Length(10), // "fstype"
+            Constraint::Length(12), // "fstype"
             Constraint::Length(10), // "100.5G"
             Constraint::Length(12), // "UNMOUNTED"
             Constraint::Fill(1),    // UUID

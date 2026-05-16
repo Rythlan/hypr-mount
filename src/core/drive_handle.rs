@@ -10,24 +10,27 @@ struct LsblkData {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Drives {
-    name: String,
-    size: String,
-    uuid: Option<String>,
-    children: Option<Vec<Partition>>,
+    pub(crate) name: String,
+    pub(crate) size: String,
+    pub(crate) uuid: Option<String>,
+    pub(crate) children: Option<Vec<Partition>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Partition {
-    name: String,
-    size: String,
-    uuid: Option<String>,
-    mountpoints: Vec<String>,
-    fstype: Option<String>,
+    pub(crate) name: String,
+    pub(crate) size: String,
+    pub(crate) uuid: Option<String>,
+    pub(crate) mountpoints: Vec<String>,
+    pub(crate) fstype: Option<String>,
 }
 
 impl Partition {
-    fn is_system_drive(&self) -> bool {
+    pub(crate) fn is_system_drive(&self) -> bool {
         let fstype = self.fstype.as_deref().unwrap_or("");
+        if fstype == "crypto_LUKS" {
+            return false;
+        }
         fstype.to_lowercase().contains("swap")
             || fstype.is_empty()
             || fstype == "squashfs"
@@ -41,6 +44,10 @@ impl Partition {
                     || (mp.to_lowercase().contains("efi") && fstype == "vfat")
                     || mp.contains("cgroup")
             })
+    }
+
+    pub(crate) fn is_luks(&self) -> bool {
+        self.fstype.as_deref() == Some(&"crypto_LUKS".to_string())
     }
     fn get_mountpoint(&self) -> String {
         self.mountpoints
@@ -68,13 +75,15 @@ pub fn list_drives() -> Result<Vec<DriveItem>, HyprMountError> {
                 if part.is_system_drive() {
                     continue;
                 }
+                let part_is_luks = part.is_luks();
                 drives_list.push(DriveItem {
                     name: format!("/dev/{}", part.name),
                     mount_point: part.get_mountpoint(),
                     size: part.size,
                     uuid: part.uuid,
                     is_mounted: !part.mountpoints.is_empty(),
-                    fstype: part.fstype.unwrap_or("None".to_string()),
+                    fstype: part.fstype.clone().unwrap_or_else(|| "None".to_string()),
+                    is_luks: part_is_luks,
                 });
             }
         }

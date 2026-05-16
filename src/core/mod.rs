@@ -12,6 +12,7 @@ pub struct DriveItem {
     pub uuid: Option<String>,
     pub is_mounted: bool,
     pub fstype: String,
+    pub is_luks: bool,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DriveConfig {
