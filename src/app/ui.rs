@@ -49,7 +49,7 @@ impl MountApp {
                     } else {
                         Style::default()
                     }),
-                    Cell::from(item.device_path.as_str()),
+                    Cell::from(item.mount_point.as_str()),
                     Cell::from(item.fstype.as_str()),
                     Cell::from(item.size.as_str()),
                     Cell::from(status_text),
@@ -229,7 +229,7 @@ impl MountApp {
         let drive_string = format!(
             "Drive: {}\nMounted as: {}\nType: {}\nSize: {}\nUUID: {}",
             drive.name,
-            drive.device_path,
+            drive.mount_point,
             drive.fstype,
             drive.size,
             drive.uuid.as_ref()?,

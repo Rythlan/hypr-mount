@@ -73,7 +73,7 @@ struct PopupPar<'a> {
 
 #[derive(Parser, Debug)]
 #[command(name = "Hypr-Mount")]
-#[command(version = "b1.0.1")]
+#[command(version = "b1.0.5")]
 #[command(about = "A TUI drive mounter", long_about = None)]
 pub struct CliArgs {
     #[arg(long, group = "mode")]
@@ -142,54 +142,58 @@ impl MountApp {
     }
     fn mount_unmount_selected_drives(&mut self) {
         let mut success_count = 0;
-        let mut error_count = 0;
-        let mut error_msg = String::new();
+        let mut skip_count = 0;
+        let mut errors: Vec<String> = Vec::new();
 
         for (idx, drive) in self.drives.iter_mut().enumerate() {
             if !self.selected_rows.contains(&idx) {
-                continue; // if drives not selected just skip
+                continue;
             }
 
-            if let Some(ref uuid) = drive.uuid {
-                if drive.is_mounted {
-                    match drive_handle::unmount_drive(uuid) {
-                        Ok(()) => {
-                            drive.is_mounted = !drive.is_mounted;
-                            self.selected_rows.remove(&idx);
-                            success_count += 1;
+            match drive.uuid.as_deref() {
+                Some(uuid) => {
+                    if drive.is_mounted {
+                        match drive_handle::unmount_drive(uuid) {
+                            Ok(()) => {
+                                drive.is_mounted = false;
+                                self.selected_rows.remove(&idx);
+                                success_count += 1;
+                            }
+                            Err(err) => {
+                                errors.push(format!("{}: {}", drive.name, err));
+                            }
                         }
-                        Err(err) => {
-                            error_msg = err.to_string();
-                            error_count += 1;
-                        }
-                    }
-                } else {
-                    match drive_handle::mount_drive(uuid) {
-                        Ok(()) => {
-                            drive.is_mounted = !drive.is_mounted;
-                            self.selected_rows.remove(&idx);
-                            success_count += 1;
-                        }
-                        Err(err) => {
-                            error_msg = err.to_string();
-                            error_count += 1;
+                    } else {
+                        match drive_handle::mount_drive(uuid) {
+                            Ok(()) => {
+                                drive.is_mounted = true;
+                                self.selected_rows.remove(&idx);
+                                success_count += 1;
+                            }
+                            Err(err) => {
+                                errors.push(format!("{}: {}", drive.name, err));
+                            }
                         }
                     }
                 }
-            } else {
-                error_msg = String::from("Drive has no UUID");
-                error_count += 1;
+                None => {
+                    errors.push(format!("{}: skipped (no UUID)", drive.name));
+                    skip_count += 1;
+                }
             }
         }
 
-        if success_count > 0 && error_count == 0 {
+        // success_count, skip_count, and errors collected above
+        if success_count > 0 && errors.is_empty() {
             self.status_message = format!("Successfully processed {} drive(s)", success_count);
-        } else if error_count > 0 {
+        } else if !errors.is_empty() {
+            let error_list = errors.join(", ");
             self.status_message = format!(
-                "Error processing {} of {} drive(s): {}",
-                error_count,
-                success_count + error_count,
-                error_msg
+                "Processed {} succeeded, {} skipped, {} failed: {}",
+                success_count,
+                skip_count,
+                errors.len(),
+                error_list
             );
         } else if success_count == 0 {
             self.status_message = String::from("No drives selected for mounting/unmounting");

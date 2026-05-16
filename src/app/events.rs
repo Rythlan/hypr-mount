@@ -62,7 +62,24 @@ impl MountApp {
                 self.mode = AppMode::ScriptPreview;
             }
             KeyCode::Char('r') => match drive_handle::list_drives() {
-                Ok(drives) => self.drives = drives,
+                Ok(new_drives) => {
+                    // Preserve selection state: keep selected drive names, remap to new indices
+                    let selected_names: Vec<String> = self
+                        .selected_rows
+                        .iter()
+                        .filter_map(|idx| self.drives.get(*idx).map(|d| d.name.clone()))
+                        .collect();
+
+                    self.drives = new_drives;
+
+                    // Remap selections by matching drive names
+                    self.selected_rows.clear();
+                    for (new_idx, drive) in self.drives.iter().enumerate() {
+                        if selected_names.contains(&drive.name) {
+                            self.selected_rows.insert(new_idx);
+                        }
+                    }
+                }
                 Err(err) => self.status_message = err.to_string(),
             },
             _ => {}

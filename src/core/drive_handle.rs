@@ -9,7 +9,7 @@ struct LsblkData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Drives {
+pub(crate) struct Drives {
     name: String,
     size: String,
     uuid: Option<String>,
@@ -17,7 +17,7 @@ struct Drives {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Partition {
+pub(crate) struct Partition {
     name: String,
     size: String,
     uuid: Option<String>,
@@ -38,7 +38,7 @@ impl Partition {
                     || mp.starts_with("/sys/")
                     || (mp == "/run" || mp.starts_with("/run/")) && !mp.starts_with("/run/media")
                     || mp.starts_with("/boot")
-                    || mp.starts_with("/efi")
+                    || (mp.to_lowercase().contains("efi") && fstype == "vfat")
                     || mp.contains("cgroup")
             })
     }
@@ -70,7 +70,7 @@ pub fn list_drives() -> Result<Vec<DriveItem>, HyprMountError> {
                 }
                 drives_list.push(DriveItem {
                     name: format!("/dev/{}", part.name),
-                    device_path: part.get_mountpoint(),
+                    mount_point: part.get_mountpoint(),
                     size: part.size,
                     uuid: part.uuid,
                     is_mounted: !part.mountpoints.is_empty(),
@@ -110,10 +110,8 @@ fn run_udisk_command(action: &str, uuid: &str) -> Result<(), HyprMountError> {
 }
 pub fn clean_udisk_error(stderr: &str) -> String {
     if stderr.contains("GDBus.Error") {
-        let parts: Vec<&str> = stderr.split(": ").collect();
-
-        if let Some(part) = parts.last() {
-            return part.trim().to_string();
+        if let Some((_, last)) = stderr.rsplit_once(": ") {
+            return last.trim().to_string();
         }
     }
     stderr.trim().to_string()
